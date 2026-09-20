@@ -1,0 +1,215 @@
+{
+  "artifact_sha256": {
+    "combined_risk_dataset.csv": "49c2115509267413dc54bf96b9eae45f84c07c2bb58c02f906b8a88f5f17a510",
+    "judge_evaluation.csv": "4ddcc9ac008860a33fef7ff6272984ce1201591d4b7fd7039dfd22101f3d624e"
+  },
+  "conflicting_label_rows": 0,
+  "counts_by_source_split_label": [
+    {
+      "count": 100,
+      "label": "Safe",
+      "source_dataset": "jailbreakbench",
+      "source_split": "benign"
+    },
+    {
+      "count": 100,
+      "label": "Harmful",
+      "source_dataset": "jailbreakbench",
+      "source_split": "harmful"
+    },
+    {
+      "count": 300,
+      "label": "Unknown",
+      "source_dataset": "jailbreakbench",
+      "source_split": "test"
+    },
+    {
+      "count": 91,
+      "label": "Jailbreak",
+      "source_dataset": "toxic_chat",
+      "source_split": "test"
+    },
+    {
+      "count": 4721,
+      "label": "Safe",
+      "source_dataset": "toxic_chat",
+      "source_split": "test"
+    },
+    {
+      "count": 271,
+      "label": "Toxic",
+      "source_dataset": "toxic_chat",
+      "source_split": "test"
+    },
+    {
+      "count": 113,
+      "label": "Jailbreak",
+      "source_dataset": "toxic_chat",
+      "source_split": "train"
+    },
+    {
+      "count": 4698,
+      "label": "Safe",
+      "source_dataset": "toxic_chat",
+      "source_split": "train"
+    },
+    {
+      "count": 271,
+      "label": "Toxic",
+      "source_dataset": "toxic_chat",
+      "source_split": "train"
+    }
+  ],
+  "cross_partition_duplicate_rows": 495,
+  "exact_duplicate_excess_rows": 398,
+  "flag_counts": {
+    "cross_partition_duplicate": 495,
+    "no_prompt_risk_label": 300
+  },
+  "label_counts": {
+    "Harmful": 100,
+    "Jailbreak": 204,
+    "Safe": 9519,
+    "Toxic": 542,
+    "Unknown": 300
+  },
+  "missing_prompt_rows": 0,
+  "normalized_duplicate_excess_rows": 480,
+  "normalized_duplicate_groups": 439,
+  "schema_version": 1,
+  "sources": {
+    "jailbreak.zip": {
+      "members": {
+        "jailbreak/behaviors_benign.csv": {
+          "columns": [
+            "Index",
+            "Goal",
+            "Target",
+            "Behavior",
+            "Category",
+            "Source"
+          ],
+          "empty_cells": {
+            "Behavior": 0,
+            "Category": 0,
+            "Goal": 0,
+            "Index": 0,
+            "Source": 0,
+            "Target": 0
+          },
+          "rows": 100,
+          "sha256": "3cda234d21a991fa309bbfea4b6d9dae31ccdf8e9d452424b6a983e4fdc33468"
+        },
+        "jailbreak/behaviors_harmful.csv": {
+          "columns": [
+            "Index",
+            "Goal",
+            "Target",
+            "Behavior",
+            "Category",
+            "Source"
+          ],
+          "empty_cells": {
+            "Behavior": 0,
+            "Category": 0,
+            "Goal": 0,
+            "Index": 0,
+            "Source": 0,
+            "Target": 0
+          },
+          "rows": 100,
+          "sha256": "4a8ec6832056b631eb092dccc60d37a61c3d441268268888b3d006288afeffa1"
+        },
+        "jailbreak/judge_comparison_test.csv": {
+          "columns": [
+            "Index",
+            "goal",
+            "prompt",
+            "target_response",
+            "human1",
+            "human2",
+            "human3",
+            "human_majority",
+            "harmbench_cf",
+            "gpt4_cf",
+            "llamaguard2_cf",
+            "llama3_cf"
+          ],
+          "empty_cells": {
+            "Index": 0,
+            "goal": 0,
+            "gpt4_cf": 0,
+            "harmbench_cf": 0,
+            "human1": 0,
+            "human2": 0,
+            "human3": 0,
+            "human_majority": 0,
+            "llama3_cf": 0,
+            "llamaguard2_cf": 0,
+            "prompt": 0,
+            "target_response": 0
+          },
+          "rows": 300,
+          "sha256": "dacaf76a1057785f11b0fc6aa07b9a73cdab588319ddfc5e8cef2909e5b112a5"
+        }
+      },
+      "sha256": "3c3e4a3943b75c00193c60a3dc12cb74dae3df5d293eabc60942d31f8829290e"
+    },
+    "lmsys_toxicchat.zip": {
+      "members": {
+        "lmsys_toxicchat/test.csv": {
+          "columns": [
+            "conv_id",
+            "user_input",
+            "model_output",
+            "human_annotation",
+            "toxicity",
+            "jailbreaking",
+            "openai_moderation"
+          ],
+          "empty_cells": {
+            "conv_id": 0,
+            "human_annotation": 0,
+            "jailbreaking": 0,
+            "model_output": 0,
+            "openai_moderation": 0,
+            "toxicity": 0,
+            "user_input": 0
+          },
+          "rows": 5083,
+          "sha256": "3c2e49889626f7738dca0a29bface0ba0a0595b2ffdd17f0e02f19df7c3c4c9b"
+        },
+        "lmsys_toxicchat/train.csv": {
+          "columns": [
+            "conv_id",
+            "user_input",
+            "model_output",
+            "human_annotation",
+            "toxicity",
+            "jailbreaking",
+            "openai_moderation"
+          ],
+          "empty_cells": {
+            "conv_id": 0,
+            "human_annotation": 0,
+            "jailbreaking": 0,
+            "model_output": 0,
+            "openai_moderation": 0,
+            "toxicity": 0,
+            "user_input": 0
+          },
+          "rows": 5082,
+          "sha256": "702eb9b7cac96c3c35e28b9b95855a71f26f21afba8666f9d243f1fa469e81ed"
+        }
+      },
+      "sha256": "f960cac353477338004bfeb03f3f31369b5f8ff9bab0c429f129f27401a994c5"
+    }
+  },
+  "total_rows": 10665,
+  "training_eligible_label_counts": {
+    "Jailbreak": 95,
+    "Safe": 4488,
+    "Toxic": 254
+  },
+  "training_eligible_rows": 4837
+}
