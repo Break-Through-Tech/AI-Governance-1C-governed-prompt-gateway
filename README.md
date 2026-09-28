@@ -14,7 +14,7 @@ These responsibilities reflect September assignments, not completed contribution
 | Prince Osei Boakye | Risk categories and governance rules; SinhSinh An is stepping in as substitute |
 | SinhSinh An | Risk categories and governance rules as substitute; token usage and cost baseline |
 | Manuel Arellano | System architecture and end-to-end data flow |
-| Linda Chen | Dataset splitting and text vectorization |
+| Francesco Febbo | Dataset splitting and text vectorization |
 | Angelina Kovalchuk | Baseline classifier development |
 | Barsat Khadka | Model evaluation |
 
