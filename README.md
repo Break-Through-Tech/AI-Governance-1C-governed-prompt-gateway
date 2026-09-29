@@ -54,7 +54,8 @@ These responsibilities reflect September assignments, not completed contribution
 
 4. Environment configuration: To be determined
 
-5. Prepare the train/validation/test splits and TF-IDF features:
+5. Prepare the train/validation/test splits and TF-IDF features from
+   `data/train_clean.csv` and `data/test_clean.csv`:
 
    ```bash
    python scripts/split_and_vectorize.py
@@ -99,7 +100,7 @@ The proposed Safe/Toxic/Jailbreak taxonomy is still being reconciled with the so
 The September baseline plan is to vectorize prompt text with TF-IDF and compare candidate classifiers: K-nearest neighbors, logistic regression, support vector machines, and Naive Bayes. Evaluation will report accuracy, precision, recall, and F1.
 
 - Selected model and hyperparameters: To be determined
-- Baseline split: 4,117 training rows, 720 validation rows, and the 5,083 original test rows; see [split details](docs/split-and-vectorize.md).
+- Baseline split: 4,278 training rows, 754 validation rows, and all 4,883 cleaned test rows; see [split details](docs/split-and-vectorize.md).
 - Trained baseline and performance: To be determined
 - Tokenizer and cost-estimation model: To be determined
 - Final implementation stack: To be determined

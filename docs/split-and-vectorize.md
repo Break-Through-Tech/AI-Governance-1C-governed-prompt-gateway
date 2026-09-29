@@ -1,9 +1,11 @@
 # Dataset split and TF-IDF features
 
 This is the handoff from [issue #5](https://github.com/Break-Through-Tech/AI-Governance-1C-governed-prompt-gateway/issues/5)
-to the baseline classifier task. It reads `data/combined_risk_dataset.csv` from
-task 2, using `prompt` as the only feature and keeping the `Safe`, `Toxic`, and
-`Jailbreak` labels unchanged.
+to the baseline classifier task. It reads `data/train_clean.csv` and
+`data/test_clean.csv`, the task 4 cleanup outputs committed in PR #15. These are
+the files referred to as `clean_train.csv` and `clean_test.csv` in the review.
+Only `user_input` is vectorized, and the lowercase `safe`, `toxic`, and
+`jailbreak` labels are kept unchanged.
 
 ## Run it
 
@@ -13,76 +15,71 @@ Use Python 3.12 or later. From the repository root:
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
-python scripts/build_risk_dataset.py --check
 python scripts/split_and_vectorize.py
 python -m unittest discover -s tests -v
 ```
 
-The input CSV is already committed. If it is missing or stale, regenerate it with
-`python scripts/build_risk_dataset.py`. You do not need to run the EDA or cleanup
-notebooks first. The same preparation is available in
+Both cleaned CSVs are already committed under `data/`. No earlier notebook needs
+to run first. This pipeline does not read `combined_risk_dataset.csv` or the raw
+archives. The same preparation is available in
 [`03_split_and_vectorize.ipynb`](../notebooks/03_split_and_vectorize.ipynb); run it
 with this environment's Python kernel in your notebook editor.
 
 ## Split decision
 
-The issue suggests 70/15/15 or 80/10/10. However, the
-[task 2 dataset contract](risk-taxonomy.md#split-preservation-and-downstream-handoff)
-requires preserving Toxic Chat's original test set. The task 4 notebook also
-recommends keeping that test set and holding out 15% of training for validation.
-This implementation follows those instructions instead of reshuffling the
-combined dataset to force an overall ratio.
+The task 4 notebook recommends holding out 15% of cleaned training data for
+validation and keeping the cleaned test set for final evaluation. This follows
+that handoff and the review request to use the cleaned CSVs.
 
-- Only `training_eligible=true` rows can enter training or validation. The task 2
-  quality flags exclude conflicting labels and overlap with reserved data.
-- Split the eligible **duplicate groups** 85/15, stratified by label, with seed 42.
-  Every copy of a normalized prompt stays in one split. Original rows are kept,
-  so the row ratio can differ slightly from the group ratio.
-- Keep all 5,083 original Toxic Chat test rows, in their original order.
-- Leave JBB behaviors and judge-comparison records out of these classifier
-  artifacts. They remain separate benchmark/evaluation data in task 2.
+- Start with the 5,082 rows in `train_clean.csv`.
+- Exclude 50 training rows matching a cleaned test prompt after Unicode NFKC
+  normalization, case folding, and whitespace collapse. Cleanup removed exact
+  overlap, but these variants remain. The split report records the exclusion.
+- Split the remaining **duplicate groups** 85/15, stratified by label, with seed
+  42. Every copy stays in one split, so row proportions differ slightly from
+  group proportions. A conflicting label within a training group raises an error.
+- Keep all 4,883 rows in `test_clean.csv`, including their text, labels, and order.
+  Source CSVs are never modified.
 
 The default run on the committed dataset produces:
 
-| Split | Safe | Toxic | Jailbreak | Total rows | Prompt groups |
+| Split | safe | toxic | jailbreak | Total rows | Prompt groups |
 |---|---:|---:|---:|---:|---:|
-| Train | 3,819 | 217 | 81 | 4,117 | 4,023 |
-| Validation | 669 | 37 | 14 | 720 | 711 |
-| Test | 4,721 | 271 | 91 | 5,083 | 4,951 |
+| Train | 3,957 | 226 | 95 | 4,278 | 4,182 |
+| Validation | 696 | 42 | 16 | 754 | 739 |
+| Test | 4,549 | 257 | 77 | 4,883 | 4,764 |
 
-There are no shared duplicate groups across these splits. The 745 unused rows
-are 245 ineligible Toxic Chat training rows and 500 JBB records. Duplicates within
-a split still count as separate observations, which matters when interpreting
-metrics. Validation has only 14 jailbreak examples, so per-class scores will be
+There are no shared duplicate groups across these splits. Duplicates within a
+split still count as separate observations, which matters when interpreting
+metrics. Validation has only 16 jailbreak examples, so per-class scores will be
 sensitive to a small number of mistakes.
 
 ## Vectorization and saved files
 
 TF-IDF uses up to 10,000 features, word unigrams and bigrams, and sublinear term
 frequency. The vocabulary and IDF weights are fitted on training prompts only;
-validation and test use `transform`. Full prompt text is retained: this pipeline
-does not apply the cleanup notebook's 2,000-character truncation. TF-IDF does not
-require that limit, and preserving text also preserves task 2's duplicate groups.
-Metadata, annotations, and labels are never included in the feature text.
+validation and test use `transform`. Cleaned text is used exactly as saved,
+including the cleanup notebook's 2,000-character truncation. Normalization is
+used only for duplicate grouping. Labels are never included in the feature text.
 
 Outputs go to `data/processed/tfidf/`, which is ignored by Git:
 
 | Files | Contents |
 |---|---|
-| `train.csv`, `val.csv`, `test.csv` | Original rows and provenance in feature-matrix order |
+| `train.csv`, `val.csv`, `test.csv` | Cleaned user_input and label rows in feature-matrix order |
 | `X_train.npz`, `X_val.npz`, `X_test.npz` | Sparse TF-IDF matrices |
 | `y_train.npy`, `y_val.npy`, `y_test.npy` | String labels in the same row order |
 | `tfidf_vectorizer.joblib` | Fitted vectorizer for new prompts |
 | `class_weights.json` | Balanced weights calculated from the final training split only |
-| `split_report.json` | Input checksum, seed, package versions, settings, shapes and counts |
+| `split_report.json` | Both input checksums, excluded overlap count, seed, package versions, shapes and counts |
 
 The default matrices have 10,000 columns. Some prompts yield no known features
-(10 train, 4 validation, 33 test rows in this run). They remain as zero vectors
+(11 train, 5 validation, 34 test rows in this run). They remain as zero vectors
 so the original row/label alignment is preserved; counts appear in the report.
 
-Use `--seed`, `--validation-size`, `--input`, or `--output-dir` to change a run.
-`--validation-size` is a fraction of eligible training groups, not of the entire
-combined dataset. Reusing an output directory replaces its generated artifacts.
+Use `--seed`, `--validation-size`, `--train-input`, `--test-input`, or
+`--output-dir` to change a run. `--validation-size` is a fraction of training
+groups after excluding test overlap. Reusing an output directory replaces its generated artifacts.
 
 ## Load the inputs for task 6
 
