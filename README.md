@@ -14,7 +14,7 @@ These responsibilities reflect September assignments, not completed contribution
 | Prince Osei Boakye | Risk categories and governance rules; SinhSinh An is stepping in as substitute |
 | SinhSinh An | Risk categories and governance rules as substitute; token usage and cost baseline |
 | Manuel Arellano | System architecture and end-to-end data flow |
-| Linda Chen | Dataset splitting and text vectorization |
+| Francesco Febbo | Dataset splitting and text vectorization |
 | Angelina Kovalchuk | Baseline classifier development |
 | Barsat Khadka | Model evaluation |
 
@@ -44,15 +44,24 @@ These responsibilities reflect September assignments, not completed contribution
 
    Extract each archive into its own directory for inspection. Source dataset cards are linked under References.
 
-3. Dependency installation: To be determined
+3. Install the baseline preprocessing dependencies with Python 3.12 or later:
 
-   The current [requirements.txt](requirements.txt) is empty.
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   python -m pip install -r requirements.txt
+   ```
 
 4. Environment configuration: To be determined
 
-5. Notebook and application execution instructions: To be determined
+5. Prepare the train/validation/test splits and TF-IDF features from
+   `data/train_clean.csv` and `data/test_clean.csv`:
 
-   `main` does not yet contain a runnable notebook or gateway application. A preliminary EDA notebook is available on the [Task-#1-and-4--Initial-EDA branch](https://github.com/Break-Through-Tech/AI-Governance-1C-governed-prompt-gateway/blob/Task-%231-and-4--Initial-EDA/notebooks/01_eda.ipynb); its environment and reproduction instructions have not been finalized.
+   ```bash
+   python scripts/split_and_vectorize.py
+   ```
+
+   See [the split and vectorization guide](docs/split-and-vectorize.md) for the data protocol, saved files, tests, and notebook entry point. The gateway application is still planned work.
 
 ---
 
@@ -91,7 +100,7 @@ The proposed Safe/Toxic/Jailbreak taxonomy is still being reconciled with the so
 The September baseline plan is to vectorize prompt text with TF-IDF and compare candidate classifiers: K-nearest neighbors, logistic regression, support vector machines, and Naive Bayes. Evaluation will report accuracy, precision, recall, and F1.
 
 - Selected model and hyperparameters: To be determined
-- Final training, validation, and test split: To be determined
+- Baseline split: 4,278 training rows, 754 validation rows, and all 4,883 cleaned test rows; see [split details](docs/split-and-vectorize.md).
 - Trained baseline and performance: To be determined
 - Tokenizer and cost-estimation model: To be determined
 - Final implementation stack: To be determined
