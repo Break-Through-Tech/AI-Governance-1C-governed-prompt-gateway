@@ -1,0 +1,30 @@
+{
+  "input_filename": "test_clean.csv",
+  "input_sha256": "4f01feab0aa828f4486a20048ef3cd3ecabf26ea24722e86b21e3e802339975e",
+  "prompt_count": 4883,
+  "label_counts": {
+    "jailbreak": 77,
+    "safe": 4549,
+    "toxic": 257
+  },
+  "reference_model": "gpt-4o-mini-2024-07-18",
+  "encoding": "o200k_base",
+  "tiktoken_version": "0.12.0",
+  "pricing": {
+    "input_usd_per_million_tokens": "0.15",
+    "source": "https://developers.openai.com/api/docs/models/gpt-4o-mini",
+    "checked_date": "2026-10-07",
+    "mode": "standard uncached input"
+  },
+  "token_statistics": {
+    "total": 181855,
+    "average": 37.24247388900266,
+    "median": 13,
+    "min": 4,
+    "max": 924
+  },
+  "total_baseline_input_cost_usd": "0.027278250000",
+  "average_baseline_input_cost_usd": "0.000005586371",
+  "scope": "Cleaned user_input text only; excludes output, system instructions, chat framing, tools, caching, and compression compute.",
+  "row_alignment": "Zero-based test_row in source order; duplicates retained; join with input checksum + test_row and verify prompt_sha256."
+}
