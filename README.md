@@ -102,7 +102,7 @@ The September baseline plan is to vectorize prompt text with TF-IDF and compare 
 - Selected model and hyperparameters: To be determined
 - Baseline split: 4,278 training rows, 754 validation rows, and all 4,883 cleaned test rows; see [split details](docs/split-and-vectorize.md).
 - Trained baseline and performance: To be determined
-- Tokenizer and cost-estimation model: To be determined
+- Tokenizer and cost-estimation model: `tiktoken` / `o200k_base` with GPT-4o mini; see [token baseline](docs/token-baseline.md).
 - Final implementation stack: To be determined
 
 The planned gateway extends this baseline with governance rules, prompt optimization, semantic caching, and model-tier recommendations.
