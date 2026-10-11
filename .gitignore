@@ -2,3 +2,5 @@
 __pycache__/
 .ipynb_checkpoints/
 data/processed/
+label_distribution_3class.png
+text_length_distribution.png
