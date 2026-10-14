@@ -163,12 +163,7 @@ call for the team, not a purely numeric one:
   false alarm. It also natively provides `predict_proba`, useful if the gateway
   later needs confidence thresholds.
 
-> **TEAM DECISION — fill in after review.** Official baseline: _not yet chosen_.
-> Recommended starting point: **untuned SVM** on the stated metric (highest test
-> macro F1), unless the team decides recall on unsafe prompts outweighs
-> precision, in which case **tuned Logistic Regression**. Record the choice and
-> one-line rationale here, and set `official_baseline` accordingly when the
-> downstream gateway code loads a model.
+> **TEAM DECISION.** Official baseline: **Untuned SVM** (test macro F1: 0.759). Rationale: highest macro F1 on the held-out test set. October's governance work will target the toxic class recall gap as the primary improvement area.
 
 ## Limitations
 
@@ -191,6 +186,6 @@ call for the team, not a purely numeric one:
 
 | File | Contents |
 |---|---|
-| `test_evaluation.json` | Full report: labels, seed, selection rule, 80% criterion, per-candidate test accuracy + macro/weighted/per-label precision/recall/F1 + confusion matrix, each candidate's validation metrics for comparison, and `best_by_test_macro_f1`. `official_baseline` is `null` until the team records it here. |
+| `test_evaluation.json` | Full report: labels, seed, selection rule, 80% criterion, per-candidate test accuracy + macro/weighted/per-label precision/recall/F1 + confusion matrix, each candidate's validation metrics for comparison, and `best_by_test_macro_f1`. `official_baseline` is **untuned SVM**. |
 
 Use `--data-dir`, `--models-dir`, or `--output-dir` to change a run.
