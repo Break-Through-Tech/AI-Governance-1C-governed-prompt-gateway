@@ -171,6 +171,7 @@ class EvaluationTests(unittest.TestCase):
             self.run_eval()
         self.assertFalse(self.output.exists())
 
+    def test_tampered_baseline_count_is_rejected(self):
         path = self.baseline / 'token_baseline.csv'
         with path.open() as stream:
             reader = csv.DictReader(stream)
