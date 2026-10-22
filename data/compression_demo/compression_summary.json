@@ -1,0 +1,62 @@
+{
+  "input_sha256": "4f01feab0aa828f4486a20048ef3cd3ecabf26ea24722e86b21e3e802339975e",
+  "encoding": "o200k_base",
+  "tiktoken_version": "0.12.0",
+  "governance_source": "SIMULATED: dataset safe label passes; other labels block; not issue #17",
+  "simulated_governance": true,
+  "total_prompts": 4883,
+  "eligible_prompts": 4549,
+  "blocked_prompts": 334,
+  "status_counts": {
+    "blocked": 334,
+    "compressed": 187,
+    "unchanged_no_savings": 3142,
+    "unchanged_protected": 1220
+  },
+  "eligible_original_tokens": 156189,
+  "eligible_compressed_tokens": 155876,
+  "tokens_saved": 313,
+  "mean_reduction_percent": 0.5841259142463983,
+  "median_reduction_percent": 0.0,
+  "aggregate_reduction_percent": 0.20039823547112792,
+  "target_percent": [
+    30,
+    50
+  ],
+  "target_assessment": "below target",
+  "preservation_metric": "Exact ordered task-body lexical equivalence after one allowed request wrapper; binary semantic proxy",
+  "preservation_threshold": 1.0,
+  "limitations": [
+    "Lexical equivalence is not proof of semantic equivalence; request tone/force can change.",
+    "Only leading polite request wrappers are removed; short or protected prompts often have no savings.",
+    "No model responses or embedding similarity were evaluated; downstream quality needs independent evaluation.",
+    "Blocked prompts are excluded from compression denominators and are never sent downstream."
+  ],
+  "examples": [
+    {
+      "prompt_id": "test-000079",
+      "before_tokens": 156,
+      "after_tokens": 154
+    },
+    {
+      "prompt_id": "test-000160",
+      "before_tokens": 12,
+      "after_tokens": 10
+    },
+    {
+      "prompt_id": "test-000218",
+      "before_tokens": 24,
+      "after_tokens": 22
+    },
+    {
+      "prompt_id": "test-000292",
+      "before_tokens": 14,
+      "after_tokens": 13
+    },
+    {
+      "prompt_id": "test-000297",
+      "before_tokens": 9,
+      "after_tokens": 7
+    }
+  ]
+}
