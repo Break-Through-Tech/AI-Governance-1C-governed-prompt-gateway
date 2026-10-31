@@ -30,18 +30,20 @@ SEED = 42
 
 
 def normalize(text: str) -> str:
-    """Same normalization split_and_vectorize.py uses for duplicate groups."""
+    """Clean up the text by normalizing Unicode, converting to lowercase, and collapsing whitespace."""
     return ' '.join(unicodedata.normalize('NFKC', text).casefold().split())
 
 
 def build_duplicate_groups(prompts: list[str]) -> dict[str, list[int]]:
-    groups: dict[str, list[int]] = defaultdict(list)
+    """Build a mapping from normalized prompts to their indices in the original list."""
+    groups = defaultdict(list)
     for i, prompt in enumerate(prompts):
         groups[normalize(prompt)].append(i)
     return groups
 
 
 def embed_all(model: SentenceTransformer, prompts: list[str]) -> np.ndarray:
+    """Embed all prompts using the given SentenceTransformer model."""
     return np.asarray(
         model.encode(prompts, batch_size=64, normalize_embeddings=True, show_progress_bar=False),
         dtype='float32',
@@ -49,10 +51,7 @@ def embed_all(model: SentenceTransformer, prompts: list[str]) -> np.ndarray:
 
 
 def streaming_simulation(prompts, responses, embeddings, model, threshold, measure_real_latency=False):
-    """Replay the test set once, in order, as described in the module
-    docstring. Uses precomputed `embeddings` unless `measure_real_latency`,
-    in which case the cache re-embeds each prompt through its normal path so
-    the reported latency includes embedding time, not just vector search."""
+    """Simulate streaming access to the semantic cache, measuring hit rate and latency."""
     cache = SemanticCache(threshold=threshold, model=model)
     hits = 0
     latencies = []
@@ -74,10 +73,7 @@ def streaming_simulation(prompts, responses, embeddings, model, threshold, measu
 
 
 def nearest_other_for_every_prompt(embeddings: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """One batched top-2 search over all prompts at once: for each row, its
-    nearest neighbor is always itself (similarity 1.0); return the SECOND
-    nearest's similarity and index for every row. Threshold-independent, so
-    computed exactly once regardless of how many thresholds are evaluated."""
+    """Compute the nearest other prompt for each prompt using FAISS."""
     import faiss
     index = faiss.IndexFlatIP(embeddings.shape[1])
     index.add(embeddings)
@@ -86,9 +82,7 @@ def nearest_other_for_every_prompt(embeddings: np.ndarray) -> tuple[np.ndarray, 
 
 
 def classify_duplicate_predictions(prompts, groups, nearest_similarity, nearest_index, threshold):
-    """Cheap per-threshold classification against the precomputed nearest-
-    other-prompt result — see duplicate-ground-truth validation in the
-    module docstring."""
+    """Classify duplicate predictions based on the nearest other prompt and the given threshold."""
     group_of = [normalize(p) for p in prompts]
     tp = fp = tn = fn = 0
     for i in range(len(prompts)):
@@ -113,6 +107,7 @@ def classify_duplicate_predictions(prompts, groups, nearest_similarity, nearest_
 
 
 def sample_hits_for_review(prompts, responses, embeddings, model, threshold, sample_size, seed):
+    """Sample hit records from the semantic cache for manual review."""
     cache = SemanticCache(threshold=threshold, model=model)
     hit_records = []
     for i, (prompt, response) in enumerate(zip(prompts, responses)):
@@ -130,6 +125,7 @@ def sample_hits_for_review(prompts, responses, embeddings, model, threshold, sam
 
 
 def latency_stats(latencies: list[float]) -> dict:
+    """Compute latency statistics for a list of latencies in seconds."""
     sorted_lat = sorted(latencies)
     p95_index = min(len(sorted_lat) - 1, int(round(0.95 * (len(sorted_lat) - 1))))
     return {
@@ -142,6 +138,7 @@ def latency_stats(latencies: list[float]) -> dict:
 
 
 def evaluate(responses_path: Path, output_dir: Path) -> dict:
+    """Evaluate the semantic cache performance on the given responses file."""
     data = pd.read_csv(responses_path, encoding='utf-8-sig')
     if list(data.columns[:3]) != ['user_input', 'label', 'model_output']:
         raise ValueError('Expected user_input,label,model_output,... columns')
@@ -186,8 +183,7 @@ def evaluate(responses_path: Path, output_dir: Path) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--responses', type=Path,
-                        default=ROOT / 'data/processed/semantic_cache/test_with_responses.csv')
+    parser.add_argument('--responses', type=Path, default=ROOT / 'data/processed/semantic_cache/test_with_responses.csv')
     parser.add_argument('--output-dir', type=Path, default=ROOT / 'data/processed/semantic_cache')
     args = parser.parse_args()
     report = evaluate(args.responses, args.output_dir)
