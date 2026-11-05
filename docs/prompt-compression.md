@@ -90,10 +90,17 @@ Failure/abstention examples covered by tests:
 
 Runtime use:
 
+The [governance module](governance-policy.md) now produces the runtime decision
+below, with a required audit log. Its response format is proposed for gateway
+review. Existing saved compression results still use simulated governance.
+
 ```python
 from scripts.compress_prompts import compress_prompt
+from scripts.governance import apply_governance
 
 # action comes from the governance layer, never from a dataset label in production.
+governance_result = apply_governance(classifier_output, prompt_id=request_id,
+                                    log_path='data/processed/governance/decisions.jsonl')
 result = compress_prompt(prompt, action=governance_result["action"])
 if result.action == "pass":
     downstream_prompt = result.compressed_prompt
