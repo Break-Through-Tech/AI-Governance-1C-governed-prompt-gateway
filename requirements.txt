@@ -1,7 +1,11 @@
 faiss-cpu==1.15.1
+fastapi==0.162.5
+httpx==0.28.1
 joblib==1.6.0
 numpy==2.5.3
+pydantic==2.14.3
 scikit-learn==1.9.1
 scipy==1.18.1
 sentence-transformers==6.1.0
 tiktoken==0.12.0
+uvicorn==0.54.0
