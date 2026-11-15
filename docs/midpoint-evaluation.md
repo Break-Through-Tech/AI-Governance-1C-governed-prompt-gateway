@@ -1,9 +1,13 @@
 # Milestone 2: Midpoint evaluation
 
-**Project:** Governed Prompt Gateway, Break Through Tech AI Studio  
-**Prepared by:** SinhSinh An  
-**Evidence reviewed:** November 14, 2026  
-**Assignment:** [Issue #23](https://github.com/Break-Through-Tech/AI-Governance-1C-governed-prompt-gateway/issues/23)  
+**Project:** Governed Prompt Gateway, Break Through Tech AI Studio
+
+**Prepared by:** SinhSinh An
+
+**Evidence reviewed:** November 14, 2026
+
+**Assignment:** [Issue #23](https://github.com/Break-Through-Tech/AI-Governance-1C-governed-prompt-gateway/issues/23)
+
 **Source snapshot:** [`e3d3a4291c088289027a5b0d3bb21508d33c8b2f`](https://github.com/Break-Through-Tech/AI-Governance-1C-governed-prompt-gateway/tree/e3d3a4291c088289027a5b0d3bb21508d33c8b2f)
 
 ## Summary
