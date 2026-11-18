@@ -182,10 +182,34 @@ class GatewayComponents:
     generator: Generator
     problems: dict[str, str] = field(default_factory=dict)  # stage -> reason, for /health.
 
+    def health(self) -> dict[str, str]:
+        """Per-stage status for /health; placeholders are labeled as such."""
+        status = {'classifier': 'ok' if self.classifier is not None else 'unavailable',
+                  'governance': 'ok', 'cache': 'ok' if self.cache is not None else 'unavailable',
+                  'compressor': 'ok', 'token_counter': 'ok',
+                  'router': 'stub (#21)' if isinstance(self.router, StubRouter) else 'ok',
+                  'generator': ('simulated' if isinstance(self.generator, SimulatedGenerator)
+                                else 'ok')}
+        return {**status, **self.problems}
+
+    def status(self) -> str:
+        """Same closed/open rule as the pipeline: 'unavailable' if a fail-closed stage
+        (classifier, governance) is down, 'degraded' if only fail-open stages are."""
+        if self.classifier is None or {'classifier', 'governance'} & self.problems.keys():
+            return 'unavailable'
+        return 'degraded' if self.problems or self.cache is None else 'ok'
+
 
 def build_components(config: GatewayConfig) -> GatewayComponents:
     """Load the real components; record (never raise) startup problems."""
     problems = {}
+    try:  # The audit log must be writable, or every governance decision would fail.
+        config.log_path.parent.mkdir(parents=True, exist_ok=True)
+        with config.log_path.open('a', encoding='utf-8'):
+            pass
+    except OSError as error:
+        problems['governance'] = f'audit log not writable: {type(error).__name__}'
+        logger.error('Governance audit log is not writable; /v1/prompt will return 503')
     classifier = None
     try:
         classifier = V2Classifier()
@@ -201,7 +225,13 @@ def build_components(config: GatewayConfig) -> GatewayComponents:
     except Exception as error:
         problems['cache'] = f'failed to start: {type(error).__name__}'
         logger.exception('Semantic cache failed to start; all lookups will miss')
+    token_counter = TiktokenCounter()
+    try:
+        token_counter.count('startup warmup')  # tiktoken loads its encoding (~1 s) on first use.
+    except Exception as error:
+        problems['token_counter'] = f'failed to load: {type(error).__name__}'
+        logger.exception('Token counter failed to load; token counts will be null')
     return GatewayComponents(
         classifier=classifier, governance=LoggedGovernance(config.log_path), cache=cache,
-        compressor=PromptCompressor(), token_counter=TiktokenCounter(),
+        compressor=PromptCompressor(), token_counter=token_counter,
         router=StubRouter(), generator=SimulatedGenerator(), problems=problems)

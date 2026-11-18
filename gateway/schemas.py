@@ -105,6 +105,6 @@ GatewayResponse = Annotated[Union[CompletedResponse, BlockedResponse, ErrorRespo
 
 
 class HealthResponse(_Strict):
-    status: Literal['ok', 'degraded']
+    status: Literal['ok', 'degraded', 'unavailable']
     policy_version: str
     components: dict[str, str]
