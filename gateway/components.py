@@ -13,19 +13,14 @@ import hashlib
 import logging
 import os
 from pathlib import Path
-import pickle
 from typing import Protocol
 
-import joblib
-
 from scripts.compress_prompts import CompressionResult, compress_prompt
-from scripts.governance import apply_governance, classify_with_svm
-from scripts.measure_token_baseline import MODEL, RATE, ROOT, count_tokens
+from scripts.governance import apply_governance
+from scripts.measure_token_baseline import RATE, ROOT, count_tokens
 
 logger = logging.getLogger('gateway')
 
-DEFAULT_MODEL_PATH = ROOT / 'data/processed/models/best_model.pkl'
-DEFAULT_VECTORIZER_PATH = ROOT / 'data/processed/tfidf/tfidf_vectorizer.joblib'
 DEFAULT_LOG_PATH = ROOT / 'data/processed/gateway/decisions.jsonl'
 DEFAULT_CACHE_THRESHOLD = 0.85
 
@@ -72,22 +67,25 @@ class Generator(Protocol):
 
 # Adapters around existing modules ---------------------------------------------
 
-class SvmClassifier:
-    """Baseline LinearSVC (#7) via scripts.governance.classify_with_svm."""
+class V2Classifier:
+    """v2 Logistic Regression (#18) via scripts.classify_prompt.classify.
 
-    def __init__(self, model, vectorizer):
-        self.model = model
-        self.vectorizer = vectorizer
+    classify_prompt loads its artifacts from its own fixed MODEL_PATH and
+    VECTORIZER_PATH, so the gateway checks those paths instead of taking its own.
+    """
 
-    @classmethod
-    def load(cls, model_path: Path | str, vectorizer_path: Path | str) -> SvmClassifier:
-        # pickle executes code on load: only point this at locally trained, trusted artifacts.
-        with Path(model_path).open('rb') as stream:
-            model = pickle.load(stream)
-        return cls(model, joblib.load(vectorizer_path))
+    def __init__(self):
+        from scripts import classify_prompt  # Imported lazily: sentence-transformers is heavy.
+        for path in (classify_prompt.MODEL_PATH, classify_prompt.VECTORIZER_PATH):
+            if not Path(path).is_file():
+                raise FileNotFoundError(2, 'artifact missing', str(path))
+        self._classify = classify_prompt.classify
+        # Load model, vectorizer, and embedder now, so a corrupt artifact fails at startup
+        # (recorded as a problem) rather than on the first request.
+        self._classify('startup warmup')
 
     def classify(self, prompt: str) -> Mapping:
-        return classify_with_svm(prompt, model=self.model, vectorizer=self.vectorizer)
+        return self._classify(prompt)
 
 
 class LoggedGovernance:
@@ -133,8 +131,9 @@ class TiktokenCounter:
 class StubRouter:
     """PLACEHOLDER for #21. Always picks the #8 reference model; no routing logic.
 
-    Cost is input tokens only, at the #8 reference price. risk_score is accepted
-    to fix the interface but ignored: it is a signed SVM score, not a probability.
+    Cost is input tokens only, at the #8 reference price. risk_score is
+    P(toxic) + P(jailbreak) from the v2 classifier (#18), a probability in
+    [0, 1]; it is accepted to fix the interface but ignored by this stub.
     """
     TIER = 'reference'
 
@@ -155,8 +154,7 @@ class SimulatedGenerator:
 
 @dataclass(frozen=True)
 class GatewayConfig:
-    model_path: Path = DEFAULT_MODEL_PATH
-    vectorizer_path: Path = DEFAULT_VECTORIZER_PATH
+    # Classifier artifact paths are fixed by scripts/classify_prompt.py, not configured here.
     log_path: Path = DEFAULT_LOG_PATH
     cache_threshold: float = DEFAULT_CACHE_THRESHOLD
     max_prompt_chars: int = 4000
@@ -165,8 +163,6 @@ class GatewayConfig:
     def from_env(cls) -> GatewayConfig:
         env = os.environ.get
         return cls(
-            model_path=Path(env('GATEWAY_MODEL_PATH', DEFAULT_MODEL_PATH)),
-            vectorizer_path=Path(env('GATEWAY_VECTORIZER_PATH', DEFAULT_VECTORIZER_PATH)),
             log_path=Path(env('GATEWAY_LOG_PATH', DEFAULT_LOG_PATH)),
             cache_threshold=float(env('GATEWAY_CACHE_THRESHOLD', DEFAULT_CACHE_THRESHOLD)),
             max_prompt_chars=int(env('GATEWAY_MAX_PROMPT_CHARS', 4000)),
@@ -190,7 +186,7 @@ def build_components(config: GatewayConfig) -> GatewayComponents:
     problems = {}
     classifier = None
     try:
-        classifier = SvmClassifier.load(config.model_path, config.vectorizer_path)
+        classifier = V2Classifier()
     except FileNotFoundError as error:
         problems['classifier'] = f'artifact missing: {Path(error.filename).name}'
         logger.error('Classifier artifacts missing; /v1/prompt will return 503')
