@@ -5,6 +5,8 @@ classify -> governance (logged) -> block: stop
                                 -> pass: cache lookup -> hit: cached response
                                                       -> miss: compress -> route -> generate -> store
 Fail closed: a classifier or governance failure is an error, never a pass.
+Fail open after a pass: compression, token counting, and the cache are
+optimizations, so their failures degrade the response instead of refusing it.
 Logs carry request IDs, stage names, and exception types, never prompt text.
 """
 from __future__ import annotations
@@ -94,8 +96,7 @@ class Gateway:
 
         lookup = self._lookup(prompt, request_id, timings)
         if lookup is not None and lookup.hit:
-            original = self._stage('count_tokens', timings, request_id,
-                                   lambda: c.token_counter.count(prompt))
+            original = self._count(prompt, request_id, timings)
             return GatewayResult(200, CompletedResponse(
                 request_id=request_id, policy_version=policy_version, response=lookup.response,
                 governance=governance,
@@ -104,15 +105,11 @@ class Gateway:
                                  compression_status='skipped_cache_hit'),
                 routing=None, timings_ms=timings))
 
-        compression = self._stage('compress', timings, request_id,
-                                  lambda: c.compressor.compress(prompt, governance.action))
-        if compression.compressed_prompt is None:
-            logger.error('request=%s stage=compress returned no prompt for a pass', request_id)
-            raise StageError('compress')
-        downstream = compression.compressed_prompt
+        downstream, tokens = self._compress(prompt, governance.action, request_id, timings)
+        token_count = tokens.original if tokens.compressed is None else tokens.compressed
         routing = self._stage('route', timings, request_id, lambda: RoutingInfo(**{
             k: v for k, v in c.router.recommend(
-                downstream, governance.risk_score, compression.compressed_tokens).items()
+                downstream, governance.risk_score, token_count).items()
             if k in ('tier', 'estimated_cost_usd')}))
         response = self._stage('generate', timings, request_id,
                                lambda: c.generator.generate(downstream, routing.tier))
@@ -123,10 +120,38 @@ class Gateway:
             cache=CacheInfo(status='miss',
                             similarity=None if lookup is None else lookup.similarity,
                             lookup_failed=lookup is None, store=store),
-            tokens=TokenInfo(original=compression.original_tokens,
-                             compressed=compression.compressed_tokens,
-                             compression_status=compression.status),
-            routing=routing, timings_ms=timings))
+            tokens=tokens, routing=routing, timings_ms=timings))
+
+    def _compress(self, prompt: str, action: str, request_id: str,
+                  timings: dict) -> tuple[str, TokenInfo]:
+        """Fail open: governance already passed this prompt, so on any compression
+        error forward the original text uncompressed rather than refusing the request."""
+        t0 = self.clock()
+        try:
+            result = self.c.compressor.compress(prompt, action)
+            if result.compressed_prompt is None:
+                raise ValueError('compressor returned no prompt for a passed request')
+            return result.compressed_prompt, TokenInfo(
+                original=result.original_tokens, compressed=result.compressed_tokens,
+                compression_status=result.status)
+        except Exception as error:
+            logger.warning('request=%s stage=compress failed, forwarding original prompt: %s',
+                           request_id, type(error).__name__)
+        finally:
+            timings['compress'] = (self.clock() - t0) * 1000
+        original = self._count(prompt, request_id, timings)
+        return prompt, TokenInfo(original=original, compressed=None, compression_status='failed')
+
+    def _count(self, text: str, request_id: str, timings: dict) -> int | None:
+        """Token counts are metadata only: a counting failure is recorded as None, not a 503."""
+        t0 = self.clock()
+        try:
+            return self.c.token_counter.count(text)
+        except Exception as error:
+            logger.warning('request=%s stage=count_tokens failed: %s', request_id, type(error).__name__)
+            return None
+        finally:
+            timings['count_tokens'] = (self.clock() - t0) * 1000
 
     def _lookup(self, prompt: str, request_id: str, timings: dict):
         """Return the cache result, or None when the cache is unavailable or raised (a miss)."""

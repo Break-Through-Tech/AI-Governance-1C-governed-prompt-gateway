@@ -57,14 +57,14 @@ class CacheInfo(_Strict):
 
 
 class TokenInfo(_Strict):
-    original: int
-    compressed: int | None  # None on a cache hit: compression does not run.
-    compression_status: str
+    original: int | None    # None when token counting failed (non-fatal).
+    compressed: int | None  # None on a cache hit (not run) or when compression failed.
+    compression_status: str  # Compressor status, 'skipped_cache_hit', or 'failed'.
 
 
 class RoutingInfo(_Strict):
     tier: str
-    estimated_cost_usd: float
+    estimated_cost_usd: float | None  # None when the token count is unknown.
     is_stub: Literal[True] = True  # Placeholder until issue #21 lands.
 
 

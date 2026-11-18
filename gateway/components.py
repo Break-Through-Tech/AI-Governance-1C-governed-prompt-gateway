@@ -57,8 +57,8 @@ class TokenCounter(Protocol):
 
 
 class Router(Protocol):
-    def recommend(self, prompt: str, risk_score: float, token_count: int) -> dict:
-        """Return {tier, estimated_cost_usd}."""
+    def recommend(self, prompt: str, risk_score: float, token_count: int | None) -> dict:
+        """Return {tier, estimated_cost_usd}. token_count is None if counting failed."""
 
 
 class Generator(Protocol):
@@ -137,7 +137,9 @@ class StubRouter:
     """
     TIER = 'reference'
 
-    def recommend(self, prompt: str, risk_score: float, token_count: int) -> dict:
+    def recommend(self, prompt: str, risk_score: float, token_count: int | None) -> dict:
+        if token_count is None:
+            return {'tier': self.TIER, 'estimated_cost_usd': None}
         cost = Decimal(token_count) * RATE / Decimal(1_000_000)
         return {'tier': self.TIER, 'estimated_cost_usd': float(cost)}
 
