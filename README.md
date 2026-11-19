@@ -241,6 +241,7 @@ The September baseline plan is to vectorize prompt text with TF-IDF and compare 
 - Tokenizer and cost-estimation model: `tiktoken` / `o200k_base` with GPT-4o mini; see [token baseline](docs/token-baseline.md).
 - Governance: [label policy, audit log, and runnable stub example](docs/governance-policy.md). Safe passes; toxic and jailbreak block. The blocked-response interface is proposed for Manuel's review.
 - Prompt compression: [implementation, simulated results, and governance handoff](docs/prompt-compression.md). The conservative baseline saves 0.20% of eligible input tokens under simulated governance; the governance module now supplies runtime actions, while a real-governance batch evaluation remains pending.
+- Model routing: [rules, pricing, and test-set results](docs/model-routing.md). Passed prompts are routed to three reference tiers by risk score and token count; on the test set this lowers estimated input cost by 60.45% versus always using the largest tier. Quality of the smaller tiers was not measured.
 - Final implementation stack: To be determined
 
 The planned gateway extends this baseline with governance rules, prompt optimization, semantic caching, and model-tier recommendations.

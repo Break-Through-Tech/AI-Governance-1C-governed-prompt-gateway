@@ -1,0 +1,94 @@
+{
+  "input_filename": "test_clean.csv",
+  "input_sha256": "4f01feab0aa828f4486a20048ef3cd3ecabf26ea24722e86b21e3e802339975e",
+  "policy_version": "label-policy-v1",
+  "classifier": "v2 (scripts/classify_prompt.py)",
+  "prompts": 4883,
+  "governance": {
+    "passed": 4560,
+    "blocked": 323
+  },
+  "thresholds": {
+    "short_tokens": 30,
+    "long_tokens": 200,
+    "elevated_risk": 0.001,
+    "high_risk": 0.1
+  },
+  "tiers": {
+    "small": {
+      "model": "gpt-6-luna",
+      "input_usd_per_million": "0.10",
+      "output_usd_per_million": "0.50"
+    },
+    "medium": {
+      "model": "gpt-6.1-terra",
+      "input_usd_per_million": "1.00",
+      "output_usd_per_million": "5.00"
+    },
+    "large": {
+      "model": "gpt-6.2-astra",
+      "input_usd_per_million": "8.00",
+      "output_usd_per_million": "40.00"
+    }
+  },
+  "pricing": {
+    "source": "https://developers.openai.com/api/docs/pricing",
+    "checked_date": "2026-11-18",
+    "mode": "standard tier, uncached input, short context"
+  },
+  "routing_distribution": {
+    "small": {
+      "prompts": 3385,
+      "percent_of_passed": 74.23,
+      "routed_tokens": 40430,
+      "estimated_cost_usd": "0.004043000000"
+    },
+    "medium": {
+      "prompts": 950,
+      "percent_of_passed": 20.83,
+      "routed_tokens": 61892,
+      "estimated_cost_usd": "0.061892000000"
+    },
+    "large": {
+      "prompts": 225,
+      "percent_of_passed": 4.93,
+      "routed_tokens": 53306,
+      "estimated_cost_usd": "0.426448000000"
+    }
+  },
+  "routing_reasons": {
+    "elevated_risk": 195,
+    "high_risk": 67,
+    "long_prompt": 158,
+    "medium_length": 755,
+    "short_low_risk": 3385
+  },
+  "source_label_by_outcome": {
+    "jailbreak": {
+      "blocked": 68,
+      "large": 4,
+      "medium": 5
+    },
+    "safe": {
+      "blocked": 88,
+      "large": 197,
+      "medium": 914,
+      "small": 3350
+    },
+    "toxic": {
+      "blocked": 167,
+      "large": 24,
+      "medium": 31,
+      "small": 35
+    }
+  },
+  "cost_comparison": {
+    "scope": "passed prompts only, input tokens after compression",
+    "routed_tokens": 155628,
+    "routed_cost_usd": "0.492383000000",
+    "always_largest_cost_usd": "1.245024000000",
+    "savings_usd": "0.752641000000",
+    "savings_percent": 60.45
+  },
+  "row_alignment": "Zero-based test_row; join with input_sha256 + test_row and verify prompt_sha256 (as #8)."
+}
