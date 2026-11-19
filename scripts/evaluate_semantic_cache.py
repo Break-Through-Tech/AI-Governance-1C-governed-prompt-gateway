@@ -1,5 +1,8 @@
 """Evaluate the semantic cache's hit rate and latency on the cleaned,
-response-recovered test set (scripts/recover_test_responses.py)"""
+response-recovered train+test set, combined (scripts/recover_responses.py).
+The classifier's train/test split has no bearing on the cache -- it never
+trains on anything -- so this reports one unified set of numbers over both
+splits rather than reserving train data for a separate comparison."""
 
 from __future__ import annotations
 
@@ -22,6 +25,10 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.semantic_cache import MODEL_NAME, SemanticCache
+
+TRAIN_RESPONSES_PATH = ROOT / 'data/processed/semantic_cache/train_with_responses.csv'
+TEST_RESPONSES_PATH = ROOT / 'data/processed/semantic_cache/test_with_responses.csv'
+OUTPUT_DIR = ROOT / 'data/processed/semantic_cache'
 
 THRESHOLDS = [0.70, 0.75, 0.80, 0.85, 0.90, 0.95]
 REPORT_THRESHOLD = 0.85  # used for the saved hit-sample review and headline latency
@@ -137,11 +144,25 @@ def latency_stats(latencies: list[float]) -> dict:
     }
 
 
-def evaluate(responses_path: Path, output_dir: Path) -> dict:
-    """Evaluate the semantic cache performance on the given responses file."""
-    data = pd.read_csv(responses_path, encoding='utf-8-sig')
-    if list(data.columns[:3]) != ['user_input', 'label', 'model_output']:
-        raise ValueError('Expected user_input,label,model_output,... columns')
+def load_combined(train_path: Path, test_path: Path) -> pd.DataFrame:
+    """Load and concatenate the train and test response-recovered splits
+    (train rows first) into one unified set to evaluate over."""
+    frames = []
+    for path, split in ((train_path, 'train'), (test_path, 'test')):
+        data = pd.read_csv(path, encoding='utf-8-sig')
+        if list(data.columns[:3]) != ['user_input', 'label', 'model_output']:
+            raise ValueError(f'Expected user_input,label,model_output,... columns in {path.name}')
+        frames.append(data.assign(split=split))
+    return pd.concat(frames, ignore_index=True)
+
+
+def evaluate(train_path: Path = None, test_path: Path = None, output_dir: Path = None) -> dict:
+    """Evaluate the semantic cache performance on the combined train+test set."""
+    train_path = train_path if train_path is not None else TRAIN_RESPONSES_PATH
+    test_path = test_path if test_path is not None else TEST_RESPONSES_PATH
+    output_dir = output_dir if output_dir is not None else OUTPUT_DIR
+
+    data = load_combined(train_path, test_path)
     prompts = data['user_input'].tolist()
     responses = data['model_output'].tolist()
 
@@ -166,7 +187,8 @@ def evaluate(responses_path: Path, output_dir: Path) -> dict:
     report = {
         'model_name': MODEL_NAME,
         'report_threshold': REPORT_THRESHOLD,
-        'test_rows': len(prompts),
+        'total_rows': len(prompts),
+        'rows_by_split': data['split'].value_counts().to_dict(),
         'normalized_duplicate_groups_with_more_than_one_row':
             sum(1 for idxs in groups.values() if len(idxs) > 1),
         'streaming_simulation': {str(t): r for t, r in streaming_results.items()},
@@ -183,12 +205,13 @@ def evaluate(responses_path: Path, output_dir: Path) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--responses', type=Path, default=ROOT / 'data/processed/semantic_cache/test_with_responses.csv')
-    parser.add_argument('--output-dir', type=Path, default=ROOT / 'data/processed/semantic_cache')
+    parser.add_argument('--train-responses', type=Path, default=TRAIN_RESPONSES_PATH)
+    parser.add_argument('--test-responses', type=Path, default=TEST_RESPONSES_PATH)
+    parser.add_argument('--output-dir', type=Path, default=OUTPUT_DIR)
     args = parser.parse_args()
-    report = evaluate(args.responses, args.output_dir)
+    report = evaluate(args.train_responses, args.test_responses, args.output_dir)
 
-    print(f"Model: {report['model_name']}  |  test rows: {report['test_rows']}")
+    print(f"Model: {report['model_name']}  |  total rows: {report['total_rows']}  {report['rows_by_split']}")
     print(f"Normalized duplicate groups with >1 row: "
           f"{report['normalized_duplicate_groups_with_more_than_one_row']}\n")
     print(f"{'threshold':>9}  {'hit_rate':>9}  {'precision':>9}  {'recall':>9}")
