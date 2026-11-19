@@ -104,6 +104,13 @@ class SemanticCacheAdapter:
     def __init__(self, threshold: float = DEFAULT_CACHE_THRESHOLD, model=None):
         from scripts.semantic_cache import SemanticCache
         self.cache = SemanticCache(threshold=threshold, model=model)
+        # The first embeddings are ~30x slower than steady state; pay that at startup.
+        self.cache.embed('startup warmup')
+
+    def reset(self) -> None:
+        """Empty the cache, reusing the already-loaded embedding model."""
+        from scripts.semantic_cache import SemanticCache
+        self.cache = SemanticCache(threshold=self.cache.threshold, model=self.cache.model)
 
     def lookup(self, prompt: str) -> CacheLookup:
         return self.cache.lookup(prompt)
