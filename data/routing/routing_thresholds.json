@@ -1,0 +1,31 @@
+{
+  "purpose": "Issue #21 routing thresholds, derived without test-set rows.",
+  "token_counts": {
+    "source": "train split (data/processed/tfidf/train.csv)",
+    "encoding": "o200k_base",
+    "rows": 4278,
+    "percentiles": {
+      "50": 13.0,
+      "75": 29.0,
+      "90": 96.0,
+      "95": 195.14999999999964,
+      "99": 352.0
+    }
+  },
+  "risk_scores": {
+    "source": "out-of-fold v2 scores on train + validation, rows predicted safe",
+    "folds": 5,
+    "grouping": "identical prompt text",
+    "seed": 42,
+    "C": 1000.0,
+    "rows": 5032,
+    "rows_predicted_safe": 4687,
+    "percentiles": {
+      "50": 1.3162121903336526e-09,
+      "75": 4.109523040540095e-07,
+      "90": 7.862994095218388e-05,
+      "95": 0.0013008652397562192,
+      "99": 0.10773489719581249
+    }
+  }
+}
