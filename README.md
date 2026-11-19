@@ -249,14 +249,15 @@ The planned gateway extends this baseline with governance rules, prompt optimiza
 
 ## 📈 **Results & Key Findings**
 
-The project is in the data exploration and baseline-development stage. No trained-classifier scores or integrated-gateway evaluation results are available on `main`.
+See the [midpoint evaluation report](docs/midpoint-evaluation.md) for the evidence, comparisons, limitations, and remaining measurements. The figures below are component results; the integrated gateway benchmark remains pending #22.
 
-| Measure | Project target or evaluation plan | Measured result |
-|---------|-----------------------------------|-----------------|
-| Prompt-risk classification | At least 80% F1; also report accuracy, precision, and recall | To be determined |
-| Input-token reduction | 30–50% for eligible prompts | To be determined |
-| Semantic cache effectiveness | Measure cache-hit rate for repeated and similar queries | To be determined |
-| Cost efficiency | Estimate savings on a simulated customer-service workload | To be determined |
+| Measure | Project target or evaluation plan | Available result |
+|---------|-----------------------------------|------------------|
+| Prompt-risk classification | At least 80% macro F1 | Documented baseline 75.9%; v2 78.0%, pending independent confirmation |
+| Input-token reduction | 30-50% for eligible prompts | 0.2004% aggregate under simulated governance; mean 0.5841%, median 0% |
+| Semantic cache effectiveness | Measure cache-hit rate | 6.5% at threshold 0.85 in an ungated historical replay |
+| Cost efficiency | Estimate savings | $0.00004695 input-only compression savings per replay at the recorded reference rate |
+| Full gateway latency | Measure mean, median, and p95 | Pending #22; cache lookup timing is reported separately |
 
 - Fairness evaluation findings: To be determined
 - Evaluation visualizations: To be determined
